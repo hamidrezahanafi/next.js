@@ -278,6 +278,63 @@ describe('app dir - navigation', () => {
     })
   })
 
+  describe('native-anchor-link-navigation', () => {
+    it('should handle back/forward navigation after clicking native anchor links', async () => {
+      const browser = await next.browser('/native-anchor-link-navigation')
+
+      // Click on section 1
+      await browser.elementByCss('#link-to-section-1').click()
+      await retry(() => expect(browser.url()).resolves.toContain('#section-1'))
+
+      // Click on section 2
+      await browser.elementByCss('#link-to-section-2').click()
+      await retry(() => expect(browser.url()).resolves.toContain('#section-2'))
+
+      // Click on section 3
+      await browser.elementByCss('#link-to-section-3').click()
+      await retry(() => expect(browser.url()).resolves.toContain('#section-3'))
+
+      // Press back button - should go to section 2
+      await browser.back()
+      await retry(() => expect(browser.url()).resolves.toContain('#section-2'))
+
+      // Press back button - should go to section 1
+      await browser.back()
+      await retry(() => expect(browser.url()).resolves.toContain('#section-1'))
+
+      // Press forward button - should go to section 2
+      await browser.forward()
+      await retry(() => expect(browser.url()).resolves.toContain('#section-2'))
+
+      // Press forward button - should go to section 3
+      await browser.forward()
+      await retry(() => expect(browser.url()).resolves.toContain('#section-3'))
+    })
+
+    it('should handle back navigation from another page to a page with hash', async () => {
+      const browser = await next.browser('/native-anchor-link-navigation')
+
+      // Click on section 2 anchor link
+      await browser.elementByCss('#link-to-section-2').click()
+      await retry(() => expect(browser.url()).resolves.toContain('#section-2'))
+
+      // Navigate to other page using Next.js Link
+      await browser.elementByCss('#link-to-other').click()
+      await browser.waitForElementByCss('#other-page-title')
+
+      // Press back button - should go back to page with #section-2
+      await browser.back()
+      await retry(async () => {
+        const url = await browser.url()
+        expect(url).toContain('/native-anchor-link-navigation')
+        expect(url).toContain('#section-2')
+      })
+
+      // Verify we're on the correct page
+      await browser.waitForElementByCss('#page-title')
+    })
+  })
+
   describe('relative hashes and queries', () => {
     const pathname = '/nested-relative-query-and-hash'
 

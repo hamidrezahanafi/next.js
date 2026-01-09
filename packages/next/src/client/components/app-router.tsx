@@ -356,6 +356,33 @@ function Router({
     }
 
     /**
+     * Handle hashchange event to mark native anchor link navigation with Next.js state.
+     * When a user clicks an anchor link (e.g., <a href="#section">), the browser creates
+     * a history entry with null state. We dispatch a restore action to update the router
+     * state, which will then trigger HistoryUpdater to save the correct tree to history.
+     * This ensures that pressing back/forward after clicking anchor links works correctly.
+     */
+    const onHashChange = () => {
+      // Only dispatch if the history state doesn't already have __NA.
+      // If __NA is present, this hashchange was triggered by a popstate (back/forward)
+      // which already dispatched a restore action - we don't want to dispatch twice.
+      if (window.history.state?.__NA) {
+        return
+      }
+
+      // Dispatch a restore action to update the router's canonical URL.
+      // This will trigger HistoryUpdater to save the tree to the history state,
+      // marking this entry with __NA so future back/forward navigation works.
+      startTransition(() => {
+        dispatchAppRouterAction({
+          type: ACTION_RESTORE,
+          url: new URL(window.location.href),
+          historyState: window.history.state?.__PRIVATE_NEXTJS_INTERNALS_TREE,
+        })
+      })
+    }
+
+    /**
      * Handle popstate event, this is used to handle back/forward in the browser.
      * By default dispatches ACTION_RESTORE, however if the history entry was not pushed/replaced by app-router it will reload the page.
      * That case can happen when the old router injected the history entry.
@@ -382,12 +409,14 @@ function Router({
       })
     }
 
-    // Register popstate event to call onPopstate.
+    // Register event listeners
     window.addEventListener('popstate', onPopState)
+    window.addEventListener('hashchange', onHashChange)
     return () => {
       window.history.pushState = originalPushState
       window.history.replaceState = originalReplaceState
       window.removeEventListener('popstate', onPopState)
+      window.removeEventListener('hashchange', onHashChange)
     }
   }, [])
 
