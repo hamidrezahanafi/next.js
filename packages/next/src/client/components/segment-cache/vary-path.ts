@@ -95,7 +95,7 @@ export type PartialSegmentVaryPath = Opaque<VaryPath, 'PartialSegmentVaryPath'>
 export function getRouteVaryPath(
   pathname: NormalizedPathname,
   search: NormalizedSearch,
-  nextUrl: NormalizedNextUrl | null
+  nextUrl: NormalizedNextUrl | null | FallbackType
 ): RouteVaryPath {
   // requestKey -> searchParams -> nextUrl
   const varyPath: VaryPath = {

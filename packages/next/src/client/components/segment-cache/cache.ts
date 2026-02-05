@@ -75,6 +75,7 @@ import {
   setSizeInCacheMap,
   deleteFromCacheMap,
   isValueExpired,
+  Fallback,
   type CacheMap,
   type UnknownMapEntry,
 } from './cache-map'
@@ -1072,10 +1073,14 @@ export function writeRouteIntoCache(
     canonicalUrl,
     isPPREnabled
   )
-  // nextUrl is always null here because we only write to the route cache for
-  // non-intercepted routes. Intercepted routes are deopted in attemptOptimisticRouting.
+  // Use Fallback for nextUrl because non-intercepted routes should be
+  // accessible regardless of the nextUrl value. The Fallback sentinel in the
+  // cache map means "match any value for this dimension." Without this,
+  // navigations via router.push() (which don't have a prior prefetch) would
+  // miss the cache because the read path uses state.nextUrl (e.g. "/") while
+  // this write path previously used null.
   const renderedSearch = fulfilledEntry.renderedSearch
-  const varyPath = getRouteVaryPath(pathname, renderedSearch, null)
+  const varyPath = getRouteVaryPath(pathname, renderedSearch, Fallback)
   const isRevalidation = false
   setInCacheMap(routeCacheMap, varyPath, fulfilledEntry, isRevalidation)
   return fulfilledEntry
