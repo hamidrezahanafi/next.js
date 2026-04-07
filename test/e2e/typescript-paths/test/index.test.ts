@@ -32,6 +32,11 @@ function runTests(next: NextInstance) {
       const $ = await next.render$('/alias-to-d-ts')
       expect($('body').text()).toMatch(/Not aliased to d\.ts file/)
     })
+
+    it('should handle typescript paths alias correctly', async () => {
+      const html = await next.render('/button')
+      expect(html).toContain('Hello')
+    })
   })
 }
 
